@@ -1,15 +1,22 @@
 package com.evv.java.customtouchlistener;
 
 import android.content.Context;
+import android.os.Handler;
 import android.view.Display;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
 
+
 public class MyTouchListener implements View.OnTouchListener {
   Context context;
   TextView tvOut;
+
+  boolean isPressed;
+  boolean isLongClicked;
+  int timeDelay = 1000;
+  int countOfHandlers = 0;
 
   float xS[] = new float[10];
   float yS[] = new float[10];
@@ -40,15 +47,32 @@ public class MyTouchListener implements View.OnTouchListener {
         xS[pointerID] = event.getX(pointerIndex);
         yS[pointerID] = event.getY(pointerIndex);
 
-        if(yS[0] <= maxY/3) tvOut.setText("section 1");
-        else if(yS[0] <= 2*maxY/3) tvOut.setText("section 2");
-        else tvOut.setText("#");
+        isPressed = true;
+        isLongClicked = false;
+        countOfHandlers++;
+        new Handler().postDelayed(new Runnable() {
+          @Override
+          public void run() {
+            if(--countOfHandlers == 0 && isPressed == true){
+              tvOut.setText("LongClick");             //do action for long click
+              isLongClicked = true;
+            }
+          }
+        }, timeDelay);
 
         break;
 
       case MotionEvent.ACTION_UP:
       case MotionEvent.ACTION_POINTER_UP:
       case MotionEvent.ACTION_CANCEL:
+
+        isPressed = false;
+        if(!isLongClicked){
+          isLongClicked = false;
+          if(yS[0] <= maxY/3) tvOut.setText("section 1");
+          else if(yS[0] <= 2*maxY/3) tvOut.setText("section 2");
+          else tvOut.setText("#");
+        }
 
         break;
 

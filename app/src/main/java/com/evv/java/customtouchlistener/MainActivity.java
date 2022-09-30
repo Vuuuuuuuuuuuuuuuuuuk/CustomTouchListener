@@ -20,4 +20,6 @@ public class MainActivity extends AppCompatActivity {
 
     layout.setOnTouchListener(new MyTouchListener(this, tvOut));
   }
+
+
 }
