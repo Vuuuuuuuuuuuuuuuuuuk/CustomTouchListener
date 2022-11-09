@@ -28,6 +28,8 @@ public class MyTouchListener implements View.OnTouchListener {
   private int maxX;
   private int maxY;
 
+  private float size, old_scale;
+
   long difTime = 100;
 
   public MyTouchListener(Context context, TextView tvOut) {
@@ -46,28 +48,38 @@ public class MyTouchListener implements View.OnTouchListener {
     int action = event.getAction() & MotionEvent.ACTION_MASK;
     int pointerIndex = (event.getAction() & MotionEvent.ACTION_POINTER_INDEX_MASK) >> MotionEvent.ACTION_POINTER_INDEX_SHIFT;
     int pointerID = event.getPointerId(pointerIndex);
+    int count = event.getPointerCount();
 
     switch (action){
       case MotionEvent.ACTION_DOWN:
       case MotionEvent.ACTION_POINTER_DOWN:
-        xS[pointerID] = event.getX(pointerIndex);
-        yS[pointerID] = event.getY(pointerIndex);
+        if(count == 1) {
+          xS[pointerID] = event.getX(pointerIndex);
+          yS[pointerID] = event.getY(pointerIndex);
 
-        isSwiped  = false;
-        isMoved   = false;
-        isPressed = true;
-        isLongClicked = false;
-        countOfHandlers++;
-        new Handler().postDelayed(new Runnable() {
-          @Override
-          public void run() {
-            if(--countOfHandlers == 0 && isPressed == true && isMoved == false && isSwiped == false){
-              tvOut.setText("LongClick");             //do action for long click
-              isLongClicked = true;
+          isSwiped = false;
+          isMoved = false;
+          isPressed = true;
+          isLongClicked = false;
+          countOfHandlers++;
+          new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+              if (--countOfHandlers == 0 && isPressed == true && isMoved == false && isSwiped == false) {
+                tvOut.setText("LongClick");             //do action for long click
+                isLongClicked = true;
+              }
             }
-          }
-        }, timeDelay);
+          }, timeDelay);
+        }else if(count == 2){
+          isLongClicked = isMoved = isPressed = isSwiped = false;
 
+          xS[pointerID] = event.getX(pointerIndex);
+          yS[pointerID] = event.getY(pointerIndex);
+
+          size =(float) Math.sqrt((xS[0] - xS[1]) * (xS[0] - xS[1]) + (yS[0] - yS[1])*(yS[0] - yS[1]));
+          old_scale = tvOut.getScaleX();
+        }
         break;
 
       case MotionEvent.ACTION_UP:
@@ -93,6 +105,23 @@ public class MyTouchListener implements View.OnTouchListener {
         break;
 
       case MotionEvent.ACTION_MOVE:
+
+        if(count == 2){
+          int x1 = (int) event.getX(event.getPointerId(0));
+          int y1 = (int) event.getY(event.getPointerId(0));
+
+          int x2 = (int) event.getX(event.getPointerId(1));
+          int y2 = (int) event.getY(event.getPointerId(1));
+
+          float dx = x1 - x2;
+          float dy = y1 - y2;
+
+          float new_size = (float) Math.sqrt(dx*dx + dy*dy);
+          float new_scale = new_size/size;
+
+          tvOut.setScaleX(new_scale*old_scale);
+          break;
+        }
 
         if(isLongClicked || isSwiped) break;
 
