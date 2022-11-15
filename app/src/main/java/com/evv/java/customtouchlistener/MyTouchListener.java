@@ -7,7 +7,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.TextView;
-import android.widget.Toast;
 
 
 public class MyTouchListener implements View.OnTouchListener {
@@ -29,6 +28,7 @@ public class MyTouchListener implements View.OnTouchListener {
   private int maxY;
 
   private float size, old_scale;
+  private float x1, y1, x2, y2, xa, ya, ra, toDegree = (float) (180/ Math.PI);
 
   long difTime = 100;
 
@@ -77,6 +77,14 @@ public class MyTouchListener implements View.OnTouchListener {
           xS[pointerID] = event.getX(pointerIndex);
           yS[pointerID] = event.getY(pointerIndex);
 
+          x1 = xS[0];
+          y1 = yS[0];
+          x2 = xS[1];
+          y2 = yS[1];
+          xa = x2 - x1;
+          ya = y2 - y1;
+          ra = (float) Math.sqrt(xa*xa + ya*ya);
+
           size =(float) Math.sqrt((xS[0] - xS[1]) * (xS[0] - xS[1]) + (yS[0] - yS[1])*(yS[0] - yS[1]));
           old_scale = tvOut.getScaleX();
         }
@@ -107,19 +115,28 @@ public class MyTouchListener implements View.OnTouchListener {
       case MotionEvent.ACTION_MOVE:
 
         if(count == 2){
-          int x1 = (int) event.getX(event.getPointerId(0));
-          int y1 = (int) event.getY(event.getPointerId(0));
+          float x3 = (int) event.getX(event.getPointerId(0));
+          float y3 = (int) event.getY(event.getPointerId(0));
 
-          int x2 = (int) event.getX(event.getPointerId(1));
-          int y2 = (int) event.getY(event.getPointerId(1));
+          float x4 = (int) event.getX(event.getPointerId(1));
+          float y4 = (int) event.getY(event.getPointerId(1));
 
-          float dx = x1 - x2;
-          float dy = y1 - y2;
+          float xb = x4 - x3;
+          float yb = y4 - y3;
 
-          float new_size = (float) Math.sqrt(dx*dx + dy*dy);
-          float new_scale = new_size/size;
+          float rb = (float) Math.sqrt(xb*xb + yb*yb);
+          float new_scale = rb/size;
 
           tvOut.setScaleX(new_scale*old_scale);
+
+          float new_angle = (float) Math.acos( (xa*xb + ya*yb) / (ra*rb))*toDegree;
+
+          //translation
+          x4 += x1 - x3;
+          y4 += y1 - y3;
+          if( (x4 - x1)*ya - (y4 - y1)*xa < 0) new_angle = -new_angle;
+
+          tvOut.setText(""+new_angle);
           break;
         }
 
@@ -134,7 +151,7 @@ public class MyTouchListener implements View.OnTouchListener {
 
             if(tempDifTime <= difTime) isSwiped = true;
             else isMoved = true;
-            }
+          }
         }
         break;
     }
